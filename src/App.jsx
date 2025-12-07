@@ -71,19 +71,19 @@ function App() {
   const [closingCostData, setClosingCostData] = useState({
     homePrice: '',
     downPaymentPercent: '',
-    state: 'VA', // VA, DC, or MD for state-specific calculations
+    state: 'TX', // Texas for state-specific calculations
     county: '', // County/City for accurate tax rate
     loanType: 'conventional', // conventional, FHA, VA
     propertyType: 'single-family', // single-family, townhome, condo
     includePrepaids: true,
-    propertyTaxRate: 1.05, // Annual property tax rate (VA default)
+    propertyTaxRate: 2.10, // Annual property tax rate (Texas default)
     homeInsurance: 1500, // Annual home insurance estimate (defaults to single-family)
     hoaFee: 0, // Monthly HOA/Condo fee
     sellerPaysClosing: false, // Whether seller is paying some closing costs
     sellerContribution: 0
   })
 
-  // Property type insurance defaults (DMV typical ranges)
+  // Property type insurance defaults (DFW typical ranges)
   const propertyInsuranceDefaults = {
     'single-family': 1500, // $1,200-$2,000/year
     'townhome': 1000, // $800-$1,400/year
@@ -93,50 +93,48 @@ function App() {
   // State default tax rates
   // NOTE: These rates should be verified annually with official county websites
   // See PROPERTY_TAX_RATES_SOURCES.md for sources and verification links
-  // Rates are expressed as percentage (e.g., 1.05 = 1.05% of assessed value)
+  // Rates are expressed as percentage (e.g., 2.10 = 2.10% of assessed value)
   const stateDefaultTaxRates = {
-    'VA': 1.05, // Virginia average (verify with official sources)
-    'DC': 0.85, // Washington DC (verify with DC Office of Tax and Revenue)
-    'MD': 0.98  // Maryland average (verify with official sources)
+    'TX': 2.10 // Texas average (verify with official sources)
   }
 
   // County-specific tax rates
   // NOTE: These are estimates based on typical rates. Actual rates may vary.
   // Property tax rates are typically set annually and can change.
   // See PROPERTY_TAX_RATES_SOURCES.md for verification sources for each county.
+  // Texas property tax rates are generally higher than national average.
   const countyTaxRates = {
-    'VA': {
-      'Fairfax County': 1.09,
-      'Arlington County': 0.96,
-      'Alexandria City': 1.11,
-      'Loudoun County': 1.04,
-      'Prince William County': 1.12,
-      'Falls Church City': 0.98,
-      'Fairfax City': 1.05,
-      'Manassas City': 1.08,
-      'Manassas Park City': 1.10,
-      'Stafford County': 1.06,
-      'Fauquier County': 0.95,
-      'Prince George County': 1.15,
-      'Spotsylvania County': 1.03,
-      'Fredericksburg City': 1.02,
-      'Other': 1.05 // VA default
-    },
-    'DC': {
-      'District of Columbia': 0.85
-    },
-    'MD': {
-      'Montgomery County': 0.92,
-      'Prince George\'s County': 1.08,
-      'Howard County': 1.01,
-      'Anne Arundel County': 0.90,
-      'Frederick County': 0.99,
-      'Charles County': 1.05,
-      'Calvert County': 0.88,
-      'St. Mary\'s County': 0.94,
-      'Baltimore County': 1.10,
-      'Baltimore City': 2.25, // Note: Much higher due to city taxes
-      'Other': 0.98 // MD default
+    'TX': {
+      // Dallas & Surrounding Areas
+      'Dallas': 2.20,
+      'Irving': 2.15,
+      'Garland': 2.18,
+      'Richardson': 2.12,
+      'Grand Prairie': 2.25,
+      'Arlington': 2.30,
+      'Fort Worth': 2.22,
+      'Desoto': 2.28,
+      'Duncanville': 2.20,
+      'Lancaster': 2.25,
+      'Cedar Hill': 2.18,
+      'Dallas County (Other)': 2.20,
+      // Frisco, Plano & North Dallas
+      'Frisco': 2.05,
+      'Plano': 2.08,
+      'McKinney': 2.10,
+      'Allen': 2.12,
+      'Addison': 2.15,
+      'Carrollton': 2.18,
+      'Lewisville': 2.20,
+      'Collin County (Other)': 2.08,
+      // Celina, Prosper & More
+      'Celina': 2.00,
+      'Prosper': 2.05,
+      'Aubrey': 2.08,
+      'Forney': 2.15,
+      'Midlothian': 2.22,
+      'North Richland Hills': 2.25,
+      'Other DFW Communities': 2.10 // Texas default
     }
   }
 
@@ -273,33 +271,25 @@ function App() {
       // Loan Origination Fee (typically 0.5-1% of loan amount)
       const loanOrigination = loanAmount * 0.01 // 1% estimate
       
-      // Appraisal (DMV: $400-$600+, varies by property size)
+      // Appraisal (DFW: $400-$600+, varies by property size)
       const appraisal = homePrice > 750000 ? 600 : 450
       
-      // Home Inspection (DMV: $350-$750)
+      // Home Inspection (DFW: $350-$750)
       const inspection = 550 // Average
       
       // Title Insurance (varies by state and loan amount)
-      // VA: ~0.5-0.7% of loan amount, DC: ~0.6-0.8%, MD: ~0.5-0.7%
-      let titleInsuranceRate = 0.006
-      if (closingCostData.state === 'DC') titleInsuranceRate = 0.007
+      // Texas: ~0.5-0.7% of loan amount
+      let titleInsuranceRate = 0.006 // Texas average
       const titleInsurance = loanAmount * titleInsuranceRate
       
       // Recording Fees (varies by state)
-      let recordingFees = 200
-      if (closingCostData.state === 'DC') recordingFees = 300
-      if (closingCostData.state === 'MD') recordingFees = 250
+      // Texas: typically $50-200 depending on county
+      let recordingFees = 150 // Texas average
       
       // Transfer Tax (varies significantly by state/county)
-      // VA: Typically 0.2% of sale price, DC: 1.1% (split between buyer/seller), MD: 0.5% (split)
-      let transferTax = 0
-      if (closingCostData.state === 'VA') {
-        transferTax = homePrice * 0.002 // 0.2%
-      } else if (closingCostData.state === 'DC') {
-        transferTax = homePrice * 0.0055 // Buyer typically pays 0.55% of 1.1%
-      } else if (closingCostData.state === 'MD') {
-        transferTax = homePrice * 0.0025 // Buyer typically pays 0.25% of 0.5%
-      }
+      // Texas: Generally no state transfer tax, but some local jurisdictions may have small fees
+      // Most Texas counties/cities do not charge transfer tax to buyers
+      let transferTax = 0 // Texas typically has no transfer tax for buyers
       
       // Property Tax Proration (estimate 1-2 months)
       const monthlyPropertyTax = (homePrice * closingCostData.propertyTaxRate / 100) / 12
@@ -1520,7 +1510,7 @@ This email was sent from your website contact form via Brevo.
                 <li>
                   <span className="cost-icon"><FileText size={24} /></span>
                   <div>
-                    <strong><span className="tooltip-trigger" data-tooltip="Closing Costs: Fees paid at settlement including appraisal, inspection, title insurance, loan origination, and recording fees. Typically 2.5-3% of home price in the DMV.">Closing Costs</span></strong>
+                    <strong><span className="tooltip-trigger" data-tooltip="Closing Costs: Fees paid at settlement including appraisal, inspection, title insurance, loan origination, and recording fees. Typically 2.5-3% of home price in the DFW area.">Closing Costs</span></strong>
                     <span>~2.5% - 3%</span>
                   </div>
                 </li>
@@ -1689,7 +1679,7 @@ This email was sent from your website contact form via Brevo.
         <div className="container">
           <h2 className="section-title">Closing Cost Calculator</h2>
           <p className="section-subtitle">
-            Estimate your total closing costs and cash needed to buy a home in the DMV. 
+            Estimate your total closing costs and cash needed to buy a home in the DFW area. 
             Get a detailed breakdown of all fees and expenses.
           </p>
           
@@ -1752,9 +1742,7 @@ This email was sent from your website contact form via Brevo.
                     onChange={handleClosingCostChange}
                     className="calc-select"
                   >
-                    <option value="VA">Virginia</option>
-                    <option value="DC">Washington DC</option>
-                    <option value="MD">Maryland</option>
+                    <option value="TX">Texas</option>
                   </select>
                   <ChevronDown className="select-arrow" size={20} />
                 </div>
@@ -1771,41 +1759,44 @@ This email was sent from your website contact form via Brevo.
                     className="calc-select"
                   >
                     <option value="">Select County/City</option>
-                    {closingCostData.state === 'VA' && (
+                    {closingCostData.state === 'TX' && (
                       <>
-                        <option value="Fairfax County">Fairfax County</option>
-                        <option value="Arlington County">Arlington County</option>
-                        <option value="Alexandria City">Alexandria City</option>
-                        <option value="Loudoun County">Loudoun County</option>
-                        <option value="Prince William County">Prince William County</option>
-                        <option value="Falls Church City">Falls Church City</option>
-                        <option value="Fairfax City">Fairfax City</option>
-                        <option value="Manassas City">Manassas City</option>
-                        <option value="Manassas Park City">Manassas Park City</option>
-                        <option value="Stafford County">Stafford County</option>
-                        <option value="Fauquier County">Fauquier County</option>
-                        <option value="Prince George County">Prince George County</option>
-                        <option value="Spotsylvania County">Spotsylvania County</option>
-                        <option value="Fredericksburg City">Fredericksburg City</option>
-                        <option value="Other">Other (VA Default Rate)</option>
-                      </>
-                    )}
-                    {closingCostData.state === 'DC' && (
-                      <option value="District of Columbia">District of Columbia</option>
-                    )}
-                    {closingCostData.state === 'MD' && (
-                      <>
-                        <option value="Montgomery County">Montgomery County</option>
-                        <option value="Prince George's County">Prince George's County</option>
-                        <option value="Howard County">Howard County</option>
-                        <option value="Anne Arundel County">Anne Arundel County</option>
-                        <option value="Frederick County">Frederick County</option>
-                        <option value="Charles County">Charles County</option>
-                        <option value="Calvert County">Calvert County</option>
-                        <option value="St. Mary's County">St. Mary's County</option>
-                        <option value="Baltimore County">Baltimore County</option>
-                        <option value="Baltimore City">Baltimore City</option>
-                        <option value="Other">Other (MD Default Rate)</option>
+                        {/* Dallas & Surrounding Areas */}
+                        <optgroup label="Dallas & Surrounding Areas">
+                          <option value="Dallas">Dallas</option>
+                          <option value="Irving">Irving</option>
+                          <option value="Garland">Garland</option>
+                          <option value="Richardson">Richardson</option>
+                          <option value="Grand Prairie">Grand Prairie</option>
+                          <option value="Arlington">Arlington</option>
+                          <option value="Fort Worth">Fort Worth</option>
+                          <option value="Desoto">Desoto</option>
+                          <option value="Duncanville">Duncanville</option>
+                          <option value="Lancaster">Lancaster</option>
+                          <option value="Cedar Hill">Cedar Hill</option>
+                          <option value="Dallas County (Other)">Dallas County (Other)</option>
+                        </optgroup>
+                        {/* Frisco, Plano & North Dallas */}
+                        <optgroup label="Frisco, Plano & North Dallas">
+                          <option value="Frisco">Frisco</option>
+                          <option value="Plano">Plano</option>
+                          <option value="McKinney">McKinney</option>
+                          <option value="Allen">Allen</option>
+                          <option value="Addison">Addison</option>
+                          <option value="Carrollton">Carrollton</option>
+                          <option value="Lewisville">Lewisville</option>
+                          <option value="Collin County (Other)">Collin County (Other)</option>
+                        </optgroup>
+                        {/* Celina, Prosper & More */}
+                        <optgroup label="Celina, Prosper & More">
+                          <option value="Celina">Celina</option>
+                          <option value="Prosper">Prosper</option>
+                          <option value="Aubrey">Aubrey</option>
+                          <option value="Forney">Forney</option>
+                          <option value="Midlothian">Midlothian</option>
+                          <option value="North Richland Hills">North Richland Hills</option>
+                          <option value="Other DFW Communities">Other DFW Communities</option>
+                        </optgroup>
                       </>
                     )}
                   </select>
@@ -1874,11 +1865,7 @@ This email was sent from your website contact form via Brevo.
                 <small className="input-help">
                   {closingCostData.county 
                     ? `Auto-set for ${closingCostData.county}. You can adjust manually if needed.`
-                    : closingCostData.state === 'VA' 
-                      ? 'VA default: 1.05%. Select county above for accurate rate.'
-                      : closingCostData.state === 'DC'
-                        ? 'DC default: 0.85%. Select county above for accurate rate.'
-                        : 'MD default: 0.98%. Select county above for accurate rate.'}
+                    : 'TX default: 2.10%. Select county above for accurate rate.'}
                 </small>
               </div>
 
@@ -2064,7 +2051,7 @@ This email was sent from your website contact form via Brevo.
                   <div className="breakdown-item">
                     <div className="breakdown-item-label">
                       <span>Appraisal</span>
-                      <span className="tooltip-icon" data-tooltip="A professional assessment of the home's value by a licensed appraiser. Required by lenders to ensure the property is worth the loan amount. In the DMV, typically costs $400-$600+ depending on property size.">
+                      <span className="tooltip-icon" data-tooltip="A professional assessment of the home's value by a licensed appraiser. Required by lenders to ensure the property is worth the loan amount. In the DFW area, typically costs $400-$600+ depending on property size.">
                         <Info size={14} />
                       </span>
                     </div>
@@ -2073,7 +2060,7 @@ This email was sent from your website contact form via Brevo.
                   <div className="breakdown-item">
                     <div className="breakdown-item-label">
                       <span>Home Inspection</span>
-                      <span className="tooltip-icon" data-tooltip="A professional evaluation of the property's condition, including structural elements, systems (HVAC, plumbing, electrical), and safety concerns. In the DMV, typically costs $350-$750. Allows you to negotiate repairs or withdraw if major issues are found.">
+                      <span className="tooltip-icon" data-tooltip="A professional evaluation of the property's condition, including structural elements, systems (HVAC, plumbing, electrical), and safety concerns. In the DFW area, typically costs $350-$750. Allows you to negotiate repairs or withdraw if major issues are found.">
                         <Info size={14} />
                       </span>
                     </div>
@@ -2082,7 +2069,7 @@ This email was sent from your website contact form via Brevo.
                   <div className="breakdown-item">
                     <div className="breakdown-item-label">
                       <span>Title Insurance</span>
-                      <span className="tooltip-icon" data-tooltip="Insurance that protects you and your lender from ownership disputes, liens, or other title issues. Rates vary by state: VA ~0.5-0.7%, DC ~0.6-0.8%, MD ~0.5-0.7% of loan amount.">
+                      <span className="tooltip-icon" data-tooltip="Insurance that protects you and your lender from ownership disputes, liens, or other title issues. Texas rates: ~0.5-0.7% of loan amount.">
                         <Info size={14} />
                       </span>
                     </div>
@@ -2091,7 +2078,7 @@ This email was sent from your website contact form via Brevo.
                   <div className="breakdown-item">
                     <div className="breakdown-item-label">
                       <span>Transfer Tax</span>
-                      <span className="tooltip-icon" data-tooltip="A tax on the transfer of property ownership. Rates vary by state: VA typically 0.2% of sale price, DC 1.1% (split between buyer/seller, buyer pays ~0.55%), MD 0.5% (split, buyer pays ~0.25%).">
+                      <span className="tooltip-icon" data-tooltip="A tax on the transfer of property ownership. Texas: Generally no state transfer tax for buyers. Some local jurisdictions may have small fees, but most DFW areas do not charge transfer tax to buyers.">
                         <Info size={14} />
                       </span>
                     </div>
@@ -2120,7 +2107,7 @@ This email was sent from your website contact form via Brevo.
                       <div className="breakdown-item">
                         <div className="breakdown-item-label">
                           <span>Home Insurance (1 year)</span>
-                          <span className="tooltip-icon" data-tooltip="First year of homeowners insurance paid upfront. Required by lenders to protect their investment. Typical range in DMV: $1,200-$2,000 per year depending on home value and coverage.">
+                          <span className="tooltip-icon" data-tooltip="First year of homeowners insurance paid upfront. Required by lenders to protect their investment. Typical range in DFW: $1,200-$2,000 per year depending on home value and coverage.">
                             <Info size={14} />
                           </span>
                         </div>
@@ -2346,7 +2333,7 @@ This email was sent from your website contact form via Brevo.
                 We'll find out what timeframe the seller prefers before submitting your offer. This ensures you get a closing date that works for you while keeping the seller happy.
               </p>
               <p className="component-description">
-                <strong>Typical timeframe:</strong> 21-30 days is most common in the DMV, though it can range from 15-90 days depending on the seller's needs. <strong>As your realtor, I'll help you negotiate the best closing date for your situation.</strong>
+                <strong>Typical timeframe:</strong> 21-30 days is most common in the DFW area, though it can range from 15-90 days depending on the seller's needs. <strong>As your realtor, I'll help you negotiate the best closing date for your situation.</strong>
               </p>
               </div>
             </div>
@@ -2375,7 +2362,7 @@ This email was sent from your website contact form via Brevo.
                 The EMD (earnest money deposit) goes into an escrow account at the title company until settlement. At closing, it's credited back to you and can be used toward your down payment or refunded.
               </p>
               <p className="component-description">
-                <strong>Market average in DMV:</strong> 1-5% of purchase price. 3% EMD is the standard. The larger the EMD, the more security the seller has that you'll move forward to settlement.
+                <strong>Market average in DFW:</strong> 1-5% of purchase price. 3% EMD is the standard. The larger the EMD, the more security the seller has that you'll move forward to settlement.
               </p>
               <p className="component-description">
                 <strong>Our strategy:</strong> If you have liquidity, a larger EMD is an easy way to make your offer stand out—at no extra cost to you. <strong>Ask me more about how we can use EMD strategically in your offer.</strong>
@@ -2501,7 +2488,7 @@ This email was sent from your website contact form via Brevo.
                 <strong>Document Review Period/Contingency:</strong> When you're under contract, you have a specific period to review all HOA/Condo association documents, including bylaws, rules, financial statements, and meeting minutes. This review period is a critical contingency that allows you to understand the association's financial health, rules, and any pending special assessments.
               </p>
               <p className="component-description">
-                <strong>Review Periods by State:</strong> In DC and MD, you have <strong>3 business days</strong> to review HOA/Condo documents. In Virginia, you have <strong>3 days</strong> (calendar days) for both HOA and Condo document review periods when under contract. During this time, you can review the documents and decide if you want to proceed with the purchase or withdraw from the contract.
+                <strong>Review Periods by State:</strong> In Texas, you typically have <strong>3-7 days</strong> to review HOA/Condo documents when under contract, depending on your contract terms. During this time, you can review the documents and decide if you want to proceed with the purchase or withdraw from the contract. Specific review periods should be negotiated in your purchase contract.
               </p>
               </div>
             </div>
@@ -2701,18 +2688,18 @@ This email was sent from your website contact form via Brevo.
               </button>
               <div className="faq-answer-content">
                 <p className="faq-answer">
-                  Yes! There are several first-time home buyer programs available in Washington DC, Northern Virginia, and Maryland that can help with down payment assistance, lower interest rates, and reduced closing costs. These programs vary by state and locality, and can include options like FHA loans, VA loans (for eligible veterans), and state-specific programs like the Virginia Housing Development Authority (VHDA) programs, DC's HPAP program, and Maryland's first-time home buyer programs. As your realtor, I'll connect you with mortgage lenders who can provide detailed information about first-time home buyer programs you may qualify for. <strong>Ask me more about first-time buyer programs in Washington DC, Northern Virginia, and Maryland.</strong>
+                  Yes! There are several first-time home buyer programs available in Texas that can help with down payment assistance, lower interest rates, and reduced closing costs. These programs include options like FHA loans, VA loans (for eligible veterans), and Texas-specific programs like the Texas Department of Housing and Community Affairs (TDHCA) programs, which offer down payment assistance and competitive interest rates. As your realtor, I'll connect you with mortgage lenders who can provide detailed information about first-time home buyer programs you may qualify for. <strong>Ask me more about first-time buyer programs in Texas.</strong>
                 </p>
               </div>
             </div>
             <div className={`faq-bar ${openFaq === 11 ? 'open' : ''}`}>
               <button className="faq-question-bar" onClick={() => toggleFaq(11)}>
-                <span>What are the best neighborhoods for home buyers in the DMV area?</span>
+                <span>What are the best neighborhoods for home buyers in the DFW area?</span>
                 <ChevronDown className={`faq-icon ${openFaq === 11 ? 'open' : ''}`} size={20} />
               </button>
               <div className="faq-answer-content">
                 <p className="faq-answer">
-                  The DMV offers excellent neighborhoods across Northern Virginia, Washington DC, and Maryland. In Northern Virginia, popular areas include Arlington, Alexandria, Falls Church, McLean, Tysons Corner, Reston, and Vienna. In DC, great options include Capitol Hill, Georgetown, Dupont Circle, Adams Morgan, and SW Waterfront. In Maryland, consider Bethesda, Rockville, Gaithersburg, and Silver Spring. Each area has unique character, price points, and amenities. As your realtor, I'll help you find the best neighborhood that fits your budget, lifestyle, and commute needs. <strong>Let's work together to explore the best neighborhoods for you.</strong>
+                  The DFW area offers excellent neighborhoods across Dallas, Collin, and surrounding counties. In Dallas & Surrounding Areas, popular areas include Dallas, Irving, Garland, Richardson, Grand Prairie, Arlington, Fort Worth, and Desoto. In Frisco, Plano & North Dallas, great options include Frisco, Plano, McKinney, Allen, Addison, Carrollton, and Lewisville. In Celina, Prosper & More, consider Celina, Prosper, Aubrey, Forney, Midlothian, and North Richland Hills. Each area has unique character, price points, and amenities. As your realtor, I'll help you find the best neighborhood that fits your budget, lifestyle, and commute needs. <strong>Let's work together to explore the best neighborhoods for you.</strong>
                 </p>
               </div>
             </div>
@@ -2740,7 +2727,7 @@ This email was sent from your website contact form via Brevo.
             </div>
             <div className="glossary-item">
               <h3 className="glossary-term">EMD (Earnest Money Deposit)</h3>
-              <p className="glossary-definition">A good-faith deposit showing you're serious about buying. Held in escrow and credited back at closing. Typically 1-5% of purchase price in the DMV.</p>
+              <p className="glossary-definition">A good-faith deposit showing you're serious about buying. Held in escrow and credited back at closing. Typically 1-5% of purchase price in the DFW area.</p>
             </div>
             <div className="glossary-item">
               <h3 className="glossary-term">Escrow</h3>
@@ -2772,7 +2759,7 @@ This email was sent from your website contact form via Brevo.
             </div>
             <div className="glossary-item">
               <h3 className="glossary-term">Transfer Tax</h3>
-              <p className="glossary-definition">A tax paid when property ownership is transferred. Rates vary by state and locality in the DMV. In Virginia, typically paid by seller; in DC and MD, often split between buyer and seller.</p>
+              <p className="glossary-definition">A tax paid when property ownership is transferred. Texas: Generally no state transfer tax for buyers. Some local jurisdictions may have small fees, but most DFW areas do not charge transfer tax to buyers.</p>
             </div>
           </div>
         </div>
@@ -2800,7 +2787,7 @@ This email was sent from your website contact form via Brevo.
                 </li>
                 <li className="includes-item">
                   <span className="includes-icon"><BarChart3 size={24} /></span>
-                  <span><strong>DMV Market Insights</strong> - Get expert analysis of current market conditions in your target neighborhoods</span>
+                  <span><strong>DFW Market Insights</strong> - Get expert analysis of current market conditions in your target neighborhoods</span>
                 </li>
                 <li className="includes-item">
                   <span className="includes-icon"><Key size={24} /></span>
@@ -2816,7 +2803,7 @@ This email was sent from your website contact form via Brevo.
                 </li>
                 <li className="includes-item">
                   <span className="includes-icon"><MessageCircle size={24} /></span>
-                  <span><strong>All Your Real Estate Questions Answered</strong> - Get expert answers to any questions you have about buying a home, the DMV market, neighborhoods, financing, or the home buying process</span>
+                  <span><strong>All Your Real Estate Questions Answered</strong> - Get expert answers to any questions you have about buying a home, the DFW market, neighborhoods, financing, or the home buying process</span>
                 </li>
               </ul>
             </div>
