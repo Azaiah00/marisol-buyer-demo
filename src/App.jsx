@@ -1312,7 +1312,7 @@ This email was sent from your website contact form via Brevo.
             </div>
             <div className="hero-image-wrapper">
               <img 
-                src="/images/marisol-profile.jpg" 
+                src="/images/marisol-profile-new.png" 
                 alt="Marisol Gallegos - Expert Real Estate Agent for Home Buyers in Dallas, Frisco, Plano, and the DFW area"
                 className="hero-photo"
                 onClick={() => setShowPhotoModal(true)}
